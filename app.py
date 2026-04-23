@@ -869,6 +869,7 @@ def serve_manifest():
 @app.route('/sw.js')
 def serve_sw():
     return Response(SW_JS, mimetype='application/javascript')
+
 @app.route('/api/audit', methods=['POST'])
 def audit_website():
     data = request.json
@@ -906,13 +907,19 @@ def audit_website():
             if c_html:
                 competitors_data.append(extract_deep_data(c_html, c_url, "Competitor Home"))
                 
-        # Step 4: Run AI Analysis per section
+        # Step 4: Run AI Analysis per section in parallel to prevent Render timeout
         funnel_audit = {}
         sections = ["Home", "Category", "Cart", "Checkout"]
+        import concurrent.futures
         
-        for section in sections:
-            # We pass competitor data to every section call so it can benchmark
-            funnel_audit[section] = analyze_section_with_ai(target_funnel_data.get(section, {}), competitors_data, section)
+        def run_analysis(section):
+            return section, analyze_section_with_ai(target_funnel_data.get(section, {}), competitors_data, section)
+            
+        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+            futures = [executor.submit(run_analysis, section) for section in sections]
+            for future in concurrent.futures.as_completed(futures):
+                sec, res = future.result()
+                funnel_audit[sec] = res
             
         return jsonify({
             "target_url": home_url,
