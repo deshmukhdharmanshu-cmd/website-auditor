@@ -184,11 +184,10 @@ def analyze_section_with_ai(target_data, competitors_data, section_name):
 
 @app.route('/')
 def serve_index():
-    return send_from_directory('static', 'index.html')
-
+    return app.send_static_file('index.html')
 @app.route('/<path:path>')
 def serve_static(path):
-    return send_from_directory('static', path)
+    return app.send_static_file(path)
 
 @app.route('/api/audit', methods=['POST'])
 def audit_website():
