@@ -869,7 +869,7 @@ def serve_manifest():
 @app.route('/sw.js')
 def serve_sw():
     return Response(SW_JS, mimetype='application/javascript')
-\n@app.route('/api/audit', methods=['POST'])
+@app.route('/api/audit', methods=['POST'])
 def audit_website():
     data = request.json
     home_url = data.get('home_url')
